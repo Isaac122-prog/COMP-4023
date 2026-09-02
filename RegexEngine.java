@@ -37,7 +37,7 @@ public class RegexEngine {
             String symbolText;
 
             if (symbol == null) {
-                symbolText = "epsilon";
+                symbolText = "ε";
             } else {
                 symbolText = symbol.toString();
             }
@@ -72,4 +72,43 @@ public class RegexEngine {
         }
     }
 
+    static NFA createLiteralNFA(char symbol) {
+        State start = new State(0, false);
+        State accept = new State(1, true);
+
+        NFA nfa = new NFA(start, accept);
+
+        nfa.addTransition(start, accept, symbol);
+
+        return nfa;
+    }
+
+    static NFA buildBasicNFA(String regex) {
+        if (regex.length() != 1) {
+            throw new IllegalArgumentException(
+                    "Basic regex must contain exactly one character.");
+        }
+
+        return createLiteralNFA(regex.charAt(0));
+    }
+
+    public static void main(String[] args) {
+
+        NFA nfa = buildBasicNFA("a");
+
+        System.out.println("Start: " + nfa.start);
+        System.out.println("Accept: " + nfa.accept);
+
+        System.out.println("States:");
+
+        for (State state : nfa.states) {
+            System.out.println("  " + state);
+        }
+
+        System.out.println("Transitions:");
+
+        for (Transition transition : nfa.transitions) {
+            System.out.println("  " + transition);
+        }
+    }
 }
