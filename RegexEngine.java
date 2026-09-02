@@ -83,22 +83,41 @@ public class RegexEngine {
         return nfa;
     }
 
+    static NFA concatenate(NFA first, NFA second) {
+        first.accept.accepting = false;
+        NFA result = new NFA(first.start, second.accept);
+
+        result.states.clear();
+        result.states.addAll(first.states);
+        result.states.addAll(second.states);
+        result.transitions.addAll(first.transitions);
+        result.addTransition(first.accept, second.start, null);
+        result.transitions.addAll(second.transitions);
+
+        return result;
+    }
+
     static NFA buildBasicNFA(String regex) {
-        if (regex.length() != 1) {
+
+        if (regex.length() == 0) {
             throw new IllegalArgumentException(
-                    "Basic regex must contain exactly one character.");
+                    "Regex cannot be empty.");
         }
 
-        return createLiteralNFA(regex.charAt(0));
+        NFA result = createLiteralNFA(regex.charAt(0));
+
+        for (int i = 1; i < regex.length(); i++) {
+            NFA next = createLiteralNFA(regex.charAt(i));
+            result = concatenate(result, next);
+        }
+        return result;
     }
 
     public static void main(String[] args) {
-
-        NFA nfa = buildBasicNFA("a");
-
+        NFA nfa = buildBasicNFA("ab");
+        
         System.out.println("Start: " + nfa.start);
         System.out.println("Accept: " + nfa.accept);
-
         System.out.println("States:");
 
         for (State state : nfa.states) {
