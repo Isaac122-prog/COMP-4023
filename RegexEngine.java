@@ -113,9 +113,32 @@ public class RegexEngine {
         return result;
     }
 
+    static NFA alternate(NFA first, NFA second) {
+        State start = new State(0, false);
+        State accept = new State(1, true);
+    
+        NFA result = new NFA(start, accept);
+        first.accept.accepting = false;
+        second.accept.accepting = false;
+    
+        result.states.clear();
+        result.states.add(start);
+        result.states.addAll(first.states);
+        result.states.addAll(second.states);
+        result.states.add(accept);
+        result.transitions.addAll(first.transitions);
+        result.transitions.addAll(second.transitions);
+        result.addTransition(start, first.start, null);
+        result.addTransition(start, second.start, null);
+        result.addTransition(first.accept, accept, null);
+        result.addTransition(second.accept, accept, null);
+    
+        return result;
+    }
+
     public static void main(String[] args) {
         NFA nfa = buildBasicNFA("ab");
-        
+
         System.out.println("Start: " + nfa.start);
         System.out.println("Accept: " + nfa.accept);
         System.out.println("States:");
