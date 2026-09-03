@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RegexEngine {
+    static int nextStateId = 0;
     static class State {
         int id;
         boolean accepting;
@@ -98,21 +99,51 @@ public class RegexEngine {
     }
 
     static NFA buildBasicNFA(String regex) {
-
         if (regex.length() == 0) {
             throw new IllegalArgumentException(
                     "Regex cannot be empty.");
         }
+    
+        int alternationIndex = regex.indexOf('|');
 
-        NFA result = createLiteralNFA(regex.charAt(0));
+        if (alternationIndex != -1) {
+            String left = regex.substring(0, alternationIndex);
+            String right = regex.substring(alternationIndex + 1);
+    
+            if (left.length() == 0 || right.length() == 0) {
+                throw new IllegalArgumentException(
+                        "Alternation must have an expression on both sides.");
+            }
+    
+            NFA leftNFA = buildBasicNFA(left);
+            NFA rightNFA = buildBasicNFA(right);
+            return alternate(leftNFA, rightNFA);
+        }
+    
+        NFA result = null;
+        int i = 0;
 
-        for (int i = 1; i < regex.length(); i++) {
-            NFA next = createLiteralNFA(regex.charAt(i));
-            result = concatenate(result, next);
+        while (i < regex.length()) {
+            char symbol = regex.charAt(i);
+            NFA current = createLiteralNFA(symbol);
+
+            if (i + 1 < regex.length()
+                    && regex.charAt(i + 1) == '*') {
+                current = star(current);
+                i += 2;
+            } else {
+                i++;
+            }
+    
+            if (result == null) {
+                result = current;
+            } else {
+                result = concatenate(result, current);
+            }
         }
         return result;
     }
-
+    
     static NFA alternate(NFA first, NFA second) {
         State start = new State(0, false);
         State accept = new State(1, true);
@@ -136,19 +167,41 @@ public class RegexEngine {
         return result;
     }
 
-    public static void main(String[] args) {
-        NFA nfa = buildBasicNFA("ab");
+    static NFA star(NFA original) {
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
+    
+        original.accept.accepting = false;
+        NFA result = new NFA(start, accept);
+    
+        result.states.clear();
+        result.states.add(start);
+        result.states.addAll(original.states);
+        result.states.add(accept);
+    
+        result.transitions.addAll(original.transitions);
+    
+        result.addTransition(start, accept, null);
+        result.addTransition(start, original.start, null);
+        result.addTransition(original.accept, accept, null);
+        result.addTransition(original.accept, original.start, null);
+    
+        return result;
+    }
 
+    public static void main(String[] args) {
+        NFA nfa = buildBasicNFA("a*");
+    
         System.out.println("Start: " + nfa.start);
         System.out.println("Accept: " + nfa.accept);
         System.out.println("States:");
-
+    
         for (State state : nfa.states) {
             System.out.println("  " + state);
         }
-
+    
         System.out.println("Transitions:");
-
+    
         for (Transition transition : nfa.transitions) {
             System.out.println("  " + transition);
         }
