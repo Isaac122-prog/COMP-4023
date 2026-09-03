@@ -127,13 +127,20 @@ public class RegexEngine {
             char symbol = regex.charAt(i);
             NFA current = createLiteralNFA(symbol);
 
-            if (i + 1 < regex.length()
-                    && regex.charAt(i + 1) == '*') {
-                current = star(current);
-                i += 2;
-            } else {
-                i++;
-            }
+        if (i + 1 < regex.length()
+            && regex.charAt(i + 1) == '*') {
+            current = star(current);
+            i += 2;
+        
+        } else if (i + 1 < regex.length()
+                && regex.charAt(i + 1) == '+') {
+        
+            current = plus(current);
+            i += 2;
+        
+        } else {
+            i++;
+        }
     
             if (result == null) {
                 result = current;
@@ -189,11 +196,31 @@ public class RegexEngine {
         return result;
     }
 
+    static NFA plus(NFA original) {
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
+    
+        original.accept.accepting = false;
+        NFA result = new NFA(start, accept);
+    
+        result.states.clear();
+        result.states.add(start);
+        result.states.addAll(original.states);
+        result.states.add(accept);
+        result.transitions.addAll(original.transitions);
+        result.addTransition(start, original.start, null);
+        result.addTransition(original.accept, accept, null);
+        result.addTransition(original.accept, original.start, null);
+    
+        return result;
+    }
+
     public static void main(String[] args) {
-        NFA nfa = buildBasicNFA("a*");
+        NFA nfa = buildBasicNFA("a+");
     
         System.out.println("Start: " + nfa.start);
         System.out.println("Accept: " + nfa.accept);
+    
         System.out.println("States:");
     
         for (State state : nfa.states) {
