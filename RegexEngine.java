@@ -104,51 +104,8 @@ public class RegexEngine {
                     "Regex cannot be empty.");
         }
     
-        int alternationIndex = regex.indexOf('|');
-
-        if (alternationIndex != -1) {
-            String left = regex.substring(0, alternationIndex);
-            String right = regex.substring(alternationIndex + 1);
-    
-            if (left.length() == 0 || right.length() == 0) {
-                throw new IllegalArgumentException(
-                        "Alternation must have an expression on both sides.");
-            }
-    
-            NFA leftNFA = buildBasicNFA(left);
-            NFA rightNFA = buildBasicNFA(right);
-            return alternate(leftNFA, rightNFA);
-        }
-    
-        NFA result = null;
-        int i = 0;
-
-        while (i < regex.length()) {
-            char symbol = regex.charAt(i);
-            NFA current = createLiteralNFA(symbol);
-
-        if (i + 1 < regex.length()
-            && regex.charAt(i + 1) == '*') {
-            current = star(current);
-            i += 2;
-        
-        } else if (i + 1 < regex.length()
-                && regex.charAt(i + 1) == '+') {
-        
-            current = plus(current);
-            i += 2;
-        
-        } else {
-            i++;
-        }
-    
-            if (result == null) {
-                result = current;
-            } else {
-                result = concatenate(result, current);
-            }
-        }
-        return result;
+        Parser parser = new Parser(regex);
+        return parser.parse();
     }
     
     static NFA alternate(NFA first, NFA second) {
@@ -215,8 +172,103 @@ public class RegexEngine {
         return result;
     }
 
+    static class Parser {
+        String regex;
+        int position;
+    
+        Parser(String regex) {
+            this.regex = regex;
+            this.position = 0;
+        }
+    
+        NFA parse() {
+            NFA result = parseAlternation();
+
+            if (position != regex.length()) {
+                throw new IllegalArgumentException(
+                        "Unexpected character: " + regex.charAt(position));
+            }
+            return result;
+        }
+    
+        NFA parseAlternation() {
+            NFA result = parseConcatenation();
+    
+            while (position < regex.length() && regex.charAt(position) == '|') {
+                position++;
+                NFA right = parseConcatenation();
+                result = alternate(result, right);
+            }
+            return result;
+        }
+    
+        NFA parseConcatenation() {
+            NFA result = null;
+
+            while (position < regex.length()) {
+                char current = regex.charAt(position);
+    
+                if (current == '|' || current == ')') {
+                    break;
+                }
+    
+                NFA next = parseRepetition();
+    
+                if (result == null) {
+                    result = next;
+                } else {
+                    result = concatenate(result, next);
+                }
+            }
+    
+            if (result == null) {
+                throw new IllegalArgumentException(
+                        "Expected an expression.");
+            }
+            return result;
+        }
+    
+        NFA parseRepetition() {
+            NFA result = parseCharacter();
+    
+            while (position < regex.length()) {
+                char current = regex.charAt(position);
+    
+                if (current == '*') {
+                    result = star(result);
+                    position++;
+    
+                } else if (current == '+') {
+                    result = plus(result);
+                    position++;
+    
+                } else {
+                    break;
+                }
+            }
+            return result;
+        }
+    
+        NFA parseCharacter() {
+            if (position >= regex.length()) {
+                throw new IllegalArgumentException(
+                        "Expected a character.");
+            }
+    
+            char current = regex.charAt(position);
+    
+            if (current == '|' || current == '*' || current == '+') {
+                throw new IllegalArgumentException(
+                        "Unexpected operator: " + current);
+            }
+    
+            position++;
+            return createLiteralNFA(current);
+        }
+    }
+
     public static void main(String[] args) {
-        NFA nfa = buildBasicNFA("a+");
+        NFA nfa = buildBasicNFA("ab*");
     
         System.out.println("Start: " + nfa.start);
         System.out.println("Accept: " + nfa.accept);
