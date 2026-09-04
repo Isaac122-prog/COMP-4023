@@ -3,6 +3,72 @@ import java.util.List;
 
 public class RegexEngine {
     static int nextStateId = 0;
+
+    static List<State> epsilonClosure(List<State> states, NFA nfa) {
+        List<State> closure = new ArrayList<>();
+        List<State> stack = new ArrayList<>();
+    
+        for (State state : states) {
+            if (!closure.contains(state)) {
+                closure.add(state);
+                stack.add(state);
+            }
+        }
+    
+        while (!stack.isEmpty()) {
+            State current = stack.remove(stack.size() - 1);
+            for (Transition transition : nfa.transitions) {
+                if (transition.from == current
+                        && transition.symbol == null) {
+                    State next = transition.to;
+
+                    if (!closure.contains(next)) {
+                        closure.add(next);
+                        stack.add(next);
+                    }
+                }
+            }
+        }
+        return closure;
+    }
+
+    static List<State> move(List<State> states, char symbol, NFA nfa) {
+        List<State> result = new ArrayList<>();
+        for (State state : states) {
+            for (Transition transition : nfa.transitions) {
+                if (transition.from == state && transition.symbol != null && transition.symbol == symbol) {
+                    if (!result.contains(transition.to)) {
+                        result.add(transition.to);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    static boolean matches(NFA nfa, String input) {
+        List<State> currentStates = new ArrayList<>();
+        currentStates.add(nfa.start);
+        currentStates = epsilonClosure(currentStates, nfa);
+        
+        for (int i = 0; i < input.length(); i++) {
+            char symbol = input.charAt(i);
+            currentStates = move(currentStates, symbol, nfa);
+            currentStates = epsilonClosure(currentStates, nfa);
+            
+            if (currentStates.isEmpty()) {
+                return false;
+            }
+        }
+        
+        for (State state : currentStates) {
+            if (state == nfa.accept) {
+                return true;
+            }
+        }        
+        return false;
+    }
+
     static class State {
         int id;
         boolean accepting;
