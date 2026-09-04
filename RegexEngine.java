@@ -1,3 +1,5 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -260,7 +262,7 @@ public class RegexEngine {
         NFA parseAlternation() {
             NFA result = parseConcatenation();
     
-            while (position < regex.length() && regex.charAt(position) == "|") {
+            while (position < regex.length() && regex.charAt(position) == '|') {
                 position++;
                 NFA right = parseConcatenation();
                 result = alternate(result, right);
@@ -274,7 +276,7 @@ public class RegexEngine {
             while (position < regex.length()) {
                 char current = regex.charAt(position);
     
-                if (current == "|" || current == ")") {
+                if (current == '|' || current == ')') {
                     break;
                 }
     
@@ -300,11 +302,11 @@ public class RegexEngine {
             while (position < regex.length()) {
                 char current = regex.charAt(position);
     
-                if (current == "*") {
+                if (current == '*') {
                     result = star(result);
                     position++;
     
-                } else if (current == "+") {
+                } else if (current == '+') {
                     result = plus(result);
                     position++;
     
@@ -323,12 +325,12 @@ public class RegexEngine {
         
             char current = regex.charAt(position);
         
-            if (current == "(") {
+            if (current == '(') {
                 position++;
                 NFA result = parseAlternation();
         
                 if (position >= regex.length()
-                        || regex.charAt(position) != ")") {
+                        || regex.charAt(position) != ')') {
                     throw new IllegalArgumentException(
                             "Missing closing parenthesis.");
                 }
@@ -346,22 +348,25 @@ public class RegexEngine {
         }
     }
 
-    public static void main(String[] args) {
-        NFA nfa = buildBasicNFA("(ab)*");
+    public static void main(String[] args) throws Exception {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     
-        System.out.println("Start: " + nfa.start);
-        System.out.println("Accept: " + nfa.accept);
+        String regex = reader.readLine();
     
-        System.out.println("States:");
-    
-        for (State state : nfa.states) {
-            System.out.println("  " + state);
+        if (regex == null || regex.length() == 0) {
+            throw new IllegalArgumentException(
+                    "Regex cannot be empty.");
         }
     
-        System.out.println("Transitions:");
+        NFA nfa = buildBasicNFA(regex);
+        System.out.println("ready");
+
+        String input;
     
-        for (Transition transition : nfa.transitions) {
-            System.out.println("  " + transition);
+        while ((input = reader.readLine()) != null) {
+            boolean result = matches(nfa, input);
+            System.out.println(result);
         }
     }
 }
