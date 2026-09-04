@@ -194,7 +194,7 @@ public class RegexEngine {
         NFA parseAlternation() {
             NFA result = parseConcatenation();
     
-            while (position < regex.length() && regex.charAt(position) == '|') {
+            while (position < regex.length() && regex.charAt(position) == "|") {
                 position++;
                 NFA right = parseConcatenation();
                 result = alternate(result, right);
@@ -208,7 +208,7 @@ public class RegexEngine {
             while (position < regex.length()) {
                 char current = regex.charAt(position);
     
-                if (current == '|' || current == ')') {
+                if (current == "|" || current == ")") {
                     break;
                 }
     
@@ -234,11 +234,11 @@ public class RegexEngine {
             while (position < regex.length()) {
                 char current = regex.charAt(position);
     
-                if (current == '*') {
+                if (current == "*") {
                     result = star(result);
                     position++;
     
-                } else if (current == '+') {
+                } else if (current == "+") {
                     result = plus(result);
                     position++;
     
@@ -252,23 +252,36 @@ public class RegexEngine {
         NFA parseCharacter() {
             if (position >= regex.length()) {
                 throw new IllegalArgumentException(
-                        "Expected a character.");
+                        "Expected an expression.");
             }
-    
+        
             char current = regex.charAt(position);
-    
-            if (current == '|' || current == '*' || current == '+') {
+        
+            if (current == "(") {
+                position++;
+                NFA result = parseAlternation();
+        
+                if (position >= regex.length()
+                        || regex.charAt(position) != ")") {
+                    throw new IllegalArgumentException(
+                            "Missing closing parenthesis.");
+                }
+                position++;
+                return result;
+            }
+        
+            if (current == ')' || current == '|' ||
+                    current == '*' || current == '+') {
                 throw new IllegalArgumentException(
                         "Unexpected operator: " + current);
             }
-    
             position++;
             return createLiteralNFA(current);
         }
     }
 
     public static void main(String[] args) {
-        NFA nfa = buildBasicNFA("ab*");
+        NFA nfa = buildBasicNFA("(ab)*");
     
         System.out.println("Start: " + nfa.start);
         System.out.println("Accept: " + nfa.accept);
