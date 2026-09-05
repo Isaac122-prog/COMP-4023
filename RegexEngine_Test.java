@@ -249,9 +249,9 @@ public class RegexEngine_Test {
         assertFalse(RegexEngine.matches(nfa, "a bc"));
     }
 
-    @Testpublic void testMoveWithWrongSymbol() {
+    @Test public void testMoveWithWrongSymbol() {
         RegexEngine.nextStateId = 0;
-        RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("a");
+        RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("b");
         List<RegexEngine.State> states = new ArrayList<>();
         states.add(nfa.start);
 
