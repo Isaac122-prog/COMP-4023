@@ -258,6 +258,5 @@ public class RegexEngine_Test {
         List<RegexEngine.State> result =
             RegexEngine.move(states, 'x', nfa);
         assertTrue(result.isEmpty());
-}
-
+    }
 }
