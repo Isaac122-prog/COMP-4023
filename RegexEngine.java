@@ -133,7 +133,9 @@ public class RegexEngine {
         }
 
         void addState(State state) {
-            states.add(state);
+            if (!states.contains(state)) {
+                states.add(state);
+            }
         }
 
         void addTransition(State from, State to, Character symbol) {
@@ -142,13 +144,13 @@ public class RegexEngine {
     }
 
     static NFA createLiteralNFA(char symbol) {
-        State start = new State(0, false);
-        State accept = new State(1, true);
-
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
+    
         NFA nfa = new NFA(start, accept);
-
+    
         nfa.addTransition(start, accept, symbol);
-
+    
         return nfa;
     }
 
@@ -157,8 +159,15 @@ public class RegexEngine {
         NFA result = new NFA(first.start, second.accept);
 
         result.states.clear();
-        result.states.addAll(first.states);
-        result.states.addAll(second.states);
+
+        for (State state : first.states) {
+            result.addState(state);
+        }
+        
+        for (State state : second.states) {
+            result.addState(state);
+        }
+
         result.transitions.addAll(first.transitions);
         result.addTransition(first.accept, second.start, null);
         result.transitions.addAll(second.transitions);
@@ -177,8 +186,8 @@ public class RegexEngine {
     }
     
     static NFA alternate(NFA first, NFA second) {
-        State start = new State(0, false);
-        State accept = new State(1, true);
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
     
         NFA result = new NFA(start, accept);
         first.accept.accepting = false;
@@ -348,9 +357,53 @@ public class RegexEngine {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    static boolean matchesVerbose(NFA nfa, String input) {
+        List<State> currentStates = new ArrayList<>();
+        currentStates.add(nfa.start);
+        currentStates = epsilonClosure(currentStates, nfa);
+        System.out.println("Initial states: " + currentStates);
+    
+        for (int i = 0; i < input.length(); i++) {
+            char symbol = input.charAt(i);
+            currentStates = move(currentStates, symbol, nfa);
+            currentStates = epsilonClosure(currentStates, nfa);
+            System.out.println(
+                    "After '" + symbol + "': " + currentStates);
+    
+            if (currentStates.isEmpty()) {
+                System.out.println("No states remain.");
+                return false;
+            }
+        }
+    
+        for (State state : currentStates) {
+            if (state == nfa.accept) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    static void printNFA(NFA nfa) {
+        System.out.println("ε-NFA");
+        for (State state : nfa.states) {
+            System.out.println(state);
+        }
+
+        System.out.println("Transitions");
+        for (Transition transition : nfa.transitions) {
+            System.out.println(transition);
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        boolean verbose = false;
+    
+        if (args.length > 0 && args[0].equals("-v")) {
+            verbose = true;
+        }
     
         String regex = reader.readLine();
     
@@ -360,12 +413,22 @@ public class RegexEngine {
         }
     
         NFA nfa = buildBasicNFA(regex);
+    
+        if (verbose) {
+            printNFA(nfa);
+        }
+    
         System.out.println("ready");
-
         String input;
     
         while ((input = reader.readLine()) != null) {
-            boolean result = matches(nfa, input);
+            boolean result;
+    
+            if (verbose) {
+                result = matchesVerbose(nfa, input);
+            } else {
+                result = matches(nfa, input);
+            }
             System.out.println(result);
         }
     }
