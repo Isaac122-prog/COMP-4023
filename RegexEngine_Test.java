@@ -1,5 +1,7 @@
 import static org.junit.Assert.*;
 import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RegexEngine_Test {
 
@@ -86,7 +88,6 @@ public class RegexEngine_Test {
         assertTrue(RegexEngine.matches(nfa, "ab"));
         assertTrue(RegexEngine.matches(nfa, "abab"));
         assertTrue(RegexEngine.matches(nfa, "ababab"));
-
         assertFalse(RegexEngine.matches(nfa, "a"));
         assertFalse(RegexEngine.matches(nfa, "b"));
         assertFalse(RegexEngine.matches(nfa, "aba"));
@@ -102,7 +103,6 @@ public class RegexEngine_Test {
         assertTrue(RegexEngine.matches(nfa, "ab"));
         assertTrue(RegexEngine.matches(nfa, "abab"));
         assertTrue(RegexEngine.matches(nfa, "ababab"));
-
         assertFalse(RegexEngine.matches(nfa, "a"));
         assertFalse(RegexEngine.matches(nfa, "aba"));
     }
@@ -115,7 +115,6 @@ public class RegexEngine_Test {
 
         assertTrue(RegexEngine.matches(nfa, "a"));
         assertTrue(RegexEngine.matches(nfa, "bc"));
-
         assertFalse(RegexEngine.matches(nfa, "b"));
         assertFalse(RegexEngine.matches(nfa, "abc"));
         assertFalse(RegexEngine.matches(nfa, "ac"));
@@ -129,14 +128,13 @@ public class RegexEngine_Test {
 
         assertTrue(RegexEngine.matches(nfa, "ac"));
         assertTrue(RegexEngine.matches(nfa, "bc"));
-
         assertFalse(RegexEngine.matches(nfa, "a"));
         assertFalse(RegexEngine.matches(nfa, "b"));
         assertFalse(RegexEngine.matches(nfa, "abc"));
     }
 
     @Test
-    public void testAssignmentExample() {
+    public void testExample() {
         RegexEngine.nextStateId = 0;
 
         RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("(ab)*|c+");
@@ -147,7 +145,6 @@ public class RegexEngine_Test {
         assertTrue(RegexEngine.matches(nfa, "c"));
         assertTrue(RegexEngine.matches(nfa, "cc"));
         assertTrue(RegexEngine.matches(nfa, "ccc"));
-
         assertFalse(RegexEngine.matches(nfa, "a"));
         assertFalse(RegexEngine.matches(nfa, "b"));
         assertFalse(RegexEngine.matches(nfa, "abc"));
@@ -204,7 +201,6 @@ public class RegexEngine_Test {
         RegexEngine.buildBasicNFA("(*a)");
     }
 
-    
     @Test
     public void testUppercaseLetters() {
         RegexEngine.nextStateId = 0;
@@ -223,4 +219,39 @@ public class RegexEngine_Test {
         assertFalse(RegexEngine.matches(nfa, "12"));
         assertFalse(RegexEngine.matches(nfa, "1234"));
     }
+
+    @Test public void testSpacesWithLetter() { 
+        RegexEngine.nextStateId = 0; 
+
+        RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("a b"); 
+        assertTrue(RegexEngine.matches(nfa, "a b")); 
+        assertFalse(RegexEngine.matches(nfa, "ab")); 
+        assertFalse(RegexEngine.matches(nfa, "a   b")); 
+        assertFalse(RegexEngine.matches(nfa, "a B")); 
+    }
+
+    @Test public void testSpaces() {
+        RegexEngine.nextStateId = 0;
+        RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("  ");
+
+        assertTrue(RegexEngine.matches(nfa, "  "));
+        assertFalse(RegexEngine.matches(nfa, " "));
+        assertFalse(RegexEngine.matches(nfa, "   "));
+    }
+
+    @Test public void testCombination() {
+        RegexEngine.nextStateId = 0;
+        RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("(a b)*|c+");
+
+        assertTrue(RegexEngine.matches(nfa, "a ba ba b"));
+        assertTrue(RegexEngine.matches(nfa, "ccccc"));
+        assertFalse(RegexEngine.matches(nfa, "a b c"));
+        assertFalse(RegexEngine.matches(nfa, "a bc"));
+    }
+
+    List<RegexEngine.State> states = new ArrayList<>();
+    states.add(nfa.start);
+    List<RegexEngine.State> result = RegexEngine.move(states, 'x', nfa);
+    assertTrue(result.isEmpty());
+
 }
