@@ -176,11 +176,9 @@ public class RegexEngine {
     }
 
     static NFA buildBasicNFA(String regex) {
-        if (regex.length() == 0) {
-            throw new IllegalArgumentException(
-                    "Regex cannot be empty.");
+        if (regex == null || regex.length() == 0) {
+            throw new IllegalArgumentException("Regex cannot be empty.");
         }
-    
         Parser parser = new Parser(regex);
         return parser.parse();
     }
@@ -307,20 +305,15 @@ public class RegexEngine {
     
         NFA parseRepetition() {
             NFA result = parseCharacter();
-    
-            while (position < regex.length()) {
+        
+            if (position < regex.length()) {
                 char current = regex.charAt(position);
-    
                 if (current == '*') {
                     result = star(result);
                     position++;
-    
                 } else if (current == '+') {
                     result = plus(result);
                     position++;
-    
-                } else {
-                    break;
                 }
             }
             return result;
