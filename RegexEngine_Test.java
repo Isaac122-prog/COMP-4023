@@ -249,9 +249,15 @@ public class RegexEngine_Test {
         assertFalse(RegexEngine.matches(nfa, "a bc"));
     }
 
-    List<RegexEngine.State> states = new ArrayList<>();
-    states.add(nfa.start);
-    List<RegexEngine.State> result = RegexEngine.move(states, 'x', nfa);
-    assertTrue(result.isEmpty());
+    @Testpublic void testMoveWithWrongSymbol() {
+        RegexEngine.nextStateId = 0;
+        RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("a");
+        List<RegexEngine.State> states = new ArrayList<>();
+        states.add(nfa.start);
+
+        List<RegexEngine.State> result =
+            RegexEngine.move(states, 'x', nfa);
+        assertTrue(result.isEmpty());
+}
 
 }
