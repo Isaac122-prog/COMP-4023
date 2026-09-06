@@ -220,7 +220,8 @@ public class RegexEngine_Test {
         assertFalse(RegexEngine.matches(nfa, "1234"));
     }
 
-    @Test public void testSpacesWithLetter() { 
+    @Test 
+    public void testSpacesWithLetter() { 
         RegexEngine.nextStateId = 0; 
 
         RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("a b"); 
@@ -230,7 +231,8 @@ public class RegexEngine_Test {
         assertFalse(RegexEngine.matches(nfa, "a B")); 
     }
 
-    @Test public void testSpaces() {
+    @Test 
+    public void testSpaces() {
         RegexEngine.nextStateId = 0;
         RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("  ");
 
@@ -239,7 +241,8 @@ public class RegexEngine_Test {
         assertFalse(RegexEngine.matches(nfa, "   "));
     }
 
-    @Test public void testCombination() {
+    @Test 
+    public void testCombination() {
         RegexEngine.nextStateId = 0;
         RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("(a b)*|c+");
 
@@ -249,7 +252,8 @@ public class RegexEngine_Test {
         assertFalse(RegexEngine.matches(nfa, "a bc"));
     }
 
-    @Test public void testMoveWithWrongSymbol() {
+    @Test 
+    public void testMoveWithWrongSymbol() {
         RegexEngine.nextStateId = 0;
         RegexEngine.NFA nfa = RegexEngine.buildBasicNFA("b");
         List<RegexEngine.State> states = new ArrayList<>();

@@ -5,7 +5,9 @@ import java.util.List;
 
 public class RegexEngine {
     static int nextStateId = 0;
-
+    
+    //finds all states that can be reached with epsilon transitions without including an input character
+    //It uses arraylist to store states and list to look at connected states
     static List<State> epsilonClosure(List<State> states, NFA nfa) {
         List<State> closure = new ArrayList<>();
         List<State> stack = new ArrayList<>();
@@ -34,6 +36,7 @@ public class RegexEngine {
         return closure;
     }
 
+    // loops through the list so it makes it easier to work with other state and transition object
     static List<State> move(List<State> states, char symbol, NFA nfa) {
         List<State> result = new ArrayList<>();
         for (State state : states) {
@@ -48,6 +51,7 @@ public class RegexEngine {
         return result;
     }
 
+    //ueses an arraylist to keep a track of all the NFA state
     static boolean matches(NFA nfa, String input) {
         List<State> currentStates = new ArrayList<>();
         currentStates.add(nfa.start);
@@ -71,6 +75,7 @@ public class RegexEngine {
         return false;
     }
 
+    //A class the represent an NFA state with behaviours, constructors and methods.
     static class State {
         int id;
         boolean accepting;
@@ -90,6 +95,7 @@ public class RegexEngine {
         }
     }
 
+    //a class to represent a NFA transition 
     static class Transition {
         State from;
         State to;
@@ -101,6 +107,7 @@ public class RegexEngine {
             this.symbol = symbol;
         }
 
+        // Overrides object.tostring so state objects will be shown in readable format. Helped me learn method overriding in Java
         @Override
         public String toString() {
             String symbolText;
@@ -115,6 +122,7 @@ public class RegexEngine {
         }
     }
 
+    //Groups all related data and behaviour into a single class
     static class NFA {
         State start;
         State accept;
@@ -131,7 +139,8 @@ public class RegexEngine {
             states.add(start);
             states.add(accept);
         }
-
+        
+        //includes a check if the object is in the list to avoid duplicate states
         void addState(State state) {
             if (!states.contains(state)) {
                 states.add(state);
@@ -143,110 +152,7 @@ public class RegexEngine {
         }
     }
 
-    static NFA createLiteralNFA(char symbol) {
-        State start = new State(nextStateId++, false);
-        State accept = new State(nextStateId++, true);
-    
-        NFA nfa = new NFA(start, accept);
-    
-        nfa.addTransition(start, accept, symbol);
-    
-        return nfa;
-    }
-
-    static NFA concatenate(NFA first, NFA second) {
-        first.accept.accepting = false;
-        NFA result = new NFA(first.start, second.accept);
-
-        result.states.clear();
-
-        for (State state : first.states) {
-            result.addState(state);
-        }
-        
-        for (State state : second.states) {
-            result.addState(state);
-        }
-
-        result.transitions.addAll(first.transitions);
-        result.addTransition(first.accept, second.start, null);
-        result.transitions.addAll(second.transitions);
-
-        return result;
-    }
-
-    static NFA buildBasicNFA(String regex) {
-        if (regex == null || regex.length() == 0) {
-            throw new IllegalArgumentException("Regex cannot be empty.");
-        }
-        Parser parser = new Parser(regex);
-        return parser.parse();
-    }
-    
-    static NFA alternate(NFA first, NFA second) {
-        State start = new State(nextStateId++, false);
-        State accept = new State(nextStateId++, true);
-    
-        NFA result = new NFA(start, accept);
-        first.accept.accepting = false;
-        second.accept.accepting = false;
-    
-        result.states.clear();
-        result.states.add(start);
-        result.states.addAll(first.states);
-        result.states.addAll(second.states);
-        result.states.add(accept);
-        result.transitions.addAll(first.transitions);
-        result.transitions.addAll(second.transitions);
-        result.addTransition(start, first.start, null);
-        result.addTransition(start, second.start, null);
-        result.addTransition(first.accept, accept, null);
-        result.addTransition(second.accept, accept, null);
-    
-        return result;
-    }
-
-    static NFA star(NFA original) {
-        State start = new State(nextStateId++, false);
-        State accept = new State(nextStateId++, true);
-    
-        original.accept.accepting = false;
-        NFA result = new NFA(start, accept);
-    
-        result.states.clear();
-        result.states.add(start);
-        result.states.addAll(original.states);
-        result.states.add(accept);
-    
-        result.transitions.addAll(original.transitions);
-    
-        result.addTransition(start, accept, null);
-        result.addTransition(start, original.start, null);
-        result.addTransition(original.accept, accept, null);
-        result.addTransition(original.accept, original.start, null);
-    
-        return result;
-    }
-
-    static NFA plus(NFA original) {
-        State start = new State(nextStateId++, false);
-        State accept = new State(nextStateId++, true);
-    
-        original.accept.accepting = false;
-        NFA result = new NFA(start, accept);
-    
-        result.states.clear();
-        result.states.add(start);
-        result.states.addAll(original.states);
-        result.states.add(accept);
-        result.transitions.addAll(original.transitions);
-        result.addTransition(start, original.start, null);
-        result.addTransition(original.accept, accept, null);
-        result.addTransition(original.accept, original.start, null);
-    
-        return result;
-    }
-
+    //Paser class that can keep the regex and current position as a field. Learned how objects can store information about current state
     static class Parser {
         String regex;
         int position;
@@ -348,6 +254,112 @@ public class RegexEngine {
             position++;
             return createLiteralNFA(current);
         }
+    }
+
+    //This help me understand object creation and construtors in java. It creats objects and has valeus passing through its constructors
+    static NFA createLiteralNFA(char symbol) {
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
+    
+        NFA nfa = new NFA(start, accept);
+    
+        nfa.addTransition(start, accept, symbol);
+    
+        return nfa;
+    }
+
+    //learned how to modify objects by combining two NFA objects by changing their state and transition list
+    static NFA concatenate(NFA first, NFA second) {
+        first.accept.accepting = false;
+        NFA result = new NFA(first.start, second.accept);
+
+        result.states.clear();
+
+        for (State state : first.states) {
+            result.addState(state);
+        }
+        
+        for (State state : second.states) {
+            result.addState(state);
+        }
+
+        result.transitions.addAll(first.transitions);
+        result.addTransition(first.accept, second.start, null);
+        result.transitions.addAll(second.transitions);
+
+        return result;
+    }
+
+    static NFA buildBasicNFA(String regex) {
+        if (regex == null || regex.length() == 0) {
+            throw new IllegalArgumentException("Regex cannot be empty.");
+        }
+        Parser parser = new Parser(regex);
+        return parser.parse();
+    }
+    
+    static NFA alternate(NFA first, NFA second) {
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
+    
+        NFA result = new NFA(start, accept);
+        first.accept.accepting = false;
+        second.accept.accepting = false;
+    
+        result.states.clear();
+        result.states.add(start);
+        result.states.addAll(first.states);
+        result.states.addAll(second.states);
+        result.states.add(accept);
+        result.transitions.addAll(first.transitions);
+        result.transitions.addAll(second.transitions);
+        result.addTransition(start, first.start, null);
+        result.addTransition(start, second.start, null);
+        result.addTransition(first.accept, accept, null);
+        result.addTransition(second.accept, accept, null);
+    
+        return result;
+    }
+
+    static NFA star(NFA original) {
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
+    
+        original.accept.accepting = false;
+        NFA result = new NFA(start, accept);
+    
+        result.states.clear();
+        result.states.add(start);
+        result.states.addAll(original.states);
+        result.states.add(accept);
+    
+        result.transitions.addAll(original.transitions);
+    
+        result.addTransition(start, accept, null);
+        result.addTransition(start, original.start, null);
+        result.addTransition(original.accept, accept, null);
+        result.addTransition(original.accept, original.start, null);
+    
+        return result;
+    }
+
+    static NFA plus(NFA original) {
+        State start = new State(nextStateId++, false);
+        State accept = new State(nextStateId++, true);
+    
+        original.accept.accepting = false;
+        NFA result = new NFA(start, accept);
+    
+        result.states.clear();
+        result.states.add(start);
+        result.states.addAll(original.states);
+        result.states.add(accept);
+        result.transitions.addAll(original.transitions);
+        result.addTransition(start, original.start, null);
+        result.addTransition(original.accept, accept, null);
+        result.addTransition(original.accept, original.start, null);
+    
+        return result;
     }
 
     static boolean matchesVerbose(NFA nfa, String input) {
