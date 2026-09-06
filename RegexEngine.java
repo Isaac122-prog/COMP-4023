@@ -290,6 +290,7 @@ public class RegexEngine {
         return result;
     }
 
+    //builds an NFA from a regular expression.
     static NFA buildBasicNFA(String regex) {
         if (regex == null || regex.length() == 0) {
             throw new IllegalArgumentException("Regex cannot be empty.");
@@ -298,6 +299,7 @@ public class RegexEngine {
         return parser.parse();
     }
     
+    //accepts an NFA from two different given NFA's. Epsilon transition allow the NFA to choose the first or second NFA
     static NFA alternate(NFA first, NFA second) {
         State start = new State(nextStateId++, false);
         State accept = new State(nextStateId++, true);
@@ -321,6 +323,7 @@ public class RegexEngine {
         return result;
     }
 
+    //after original expression is matched, the accept state can finish or use epsilon transition back to original to repeat the expression again
     static NFA star(NFA original) {
         State start = new State(nextStateId++, false);
         State accept = new State(nextStateId++, true);
@@ -343,6 +346,8 @@ public class RegexEngine {
         return result;
     }
 
+    //learned how an existing NFA can be modified and combined with new created states and transitions to build a more complex NFA. the + is similar to *.
+    static NFA plus(NFA original) {
     static NFA plus(NFA original) {
         State start = new State(nextStateId++, false);
         State accept = new State(nextStateId++, true);
@@ -362,6 +367,7 @@ public class RegexEngine {
         return result;
     }
 
+    //prints the current state after each step so the matching process can be seen. NFA can have multiple states while processing input strings
     static boolean matchesVerbose(NFA nfa, String input) {
         List<State> currentStates = new ArrayList<>();
         currentStates.add(nfa.start);
@@ -389,6 +395,7 @@ public class RegexEngine {
         return false;
     }
 
+    // using for loops to go through lissts of states and transitions.
     static void printNFA(NFA nfa) {
         System.out.println("ε-NFA");
         for (State state : nfa.states) {
